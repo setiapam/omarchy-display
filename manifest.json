@@ -4,7 +4,7 @@
   "name": "Display Settings",
   "version": "0.2.12",
   "author": "Amin Marashi",
-  "description": "Arrange displays and adjust resolution, scale, brightness, night light, and refresh rate.",
+  "description": "Display and monitor settings for Omarchy and Hyprland. Arrange displays, monitors, and screens with drag-and-drop layout controls. Adjust screen resolution, scaling, brightness, night light, and refresh rate.",
   "kinds": [
     "bar-widget"
   ],
