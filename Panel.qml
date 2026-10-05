@@ -211,31 +211,27 @@ Panel {
   }
 
   function visualX(display) {
-    return Number(display.x) * physicalUnitScale
+    return Number(display.x)
   }
 
   function visualY(display) {
-    return Number(display.y) * physicalUnitScale
+    return Number(display.y)
   }
 
   function visualWidth(display) {
-    return hasPhysicalSize(display)
-      ? physicalWidth(display) * previewPhysicalScale(display)
-      : logicalWidth(display) * physicalUnitScale
+    return logicalWidth(display)
   }
 
   function visualHeight(display) {
-    return hasPhysicalSize(display)
-      ? physicalHeight(display) * previewPhysicalScale(display)
-      : logicalHeight(display) * physicalUnitScale
+    return logicalHeight(display)
   }
 
   function arrangementWidth(display) {
-    return Math.max(logicalWidth(display), visualWidth(display) / Math.max(0.01, physicalUnitScale))
+    return logicalWidth(display)
   }
 
   function arrangementHeight(display) {
-    return Math.max(logicalHeight(display), visualHeight(display) / Math.max(0.01, physicalUnitScale))
+    return logicalHeight(display)
   }
 
   function arrangementRectangles() {
@@ -259,12 +255,12 @@ Panel {
 
   function constrainDragPosition(movedName, screenX, screenY) {
     if (canvas.layoutScale <= 0) return { x: screenX, y: screenY }
-    var requestedX = ((screenX - canvas.originX) / canvas.layoutScale) / physicalUnitScale
-    var requestedY = ((screenY - canvas.originY) / canvas.layoutScale) / physicalUnitScale
+    var requestedX = (screenX - canvas.originX) / canvas.layoutScale
+    var requestedY = (screenY - canvas.originY) / canvas.layoutScale
     var position = nearestClearPosition(movedName, requestedX, requestedY)
     return {
-      x: canvas.originX + position.x * physicalUnitScale * canvas.layoutScale,
-      y: canvas.originY + position.y * physicalUnitScale * canvas.layoutScale
+      x: canvas.originX + position.x * canvas.layoutScale,
+      y: canvas.originY + position.y * canvas.layoutScale
     }
   }
 
@@ -533,8 +529,8 @@ Panel {
     if (canvas.layoutScale <= 0) return
     var visualPositionX = (screenX - canvas.originX) / canvas.layoutScale
     var visualPositionY = (screenY - canvas.originY) / canvas.layoutScale
-    var movedX = Math.round((visualPositionX / physicalUnitScale) / 10) * 10
-    var movedY = Math.round((visualPositionY / physicalUnitScale) / 10) * 10
+    var movedX = Math.round(visualPositionX / 10) * 10
+    var movedY = Math.round(visualPositionY / 10) * 10
     var clearPosition = nearestClearPosition(movedName, movedX, movedY)
     movedX = clearPosition.x
     movedY = clearPosition.y
