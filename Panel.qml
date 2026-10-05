@@ -1168,6 +1168,47 @@ Panel {
               }
 
               PanelSeparator { foreground: root.foreground }
+
+              Item {
+                width: parent.width
+                implicitHeight: Math.max(textSizeHeader.implicitHeight, textSizeValueLabel.implicitHeight)
+                PanelSectionHeader {
+                  id: textSizeHeader
+                  anchors.left: parent.left
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: "TEXT SIZE"
+                  foreground: root.foreground
+                  fontFamily: root.fontFamily
+                }
+                Text {
+                  id: textSizeValueLabel
+                  anchors.right: parent.right
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: (root.displayedTextPx() === 12
+                         ? "Default (" + root.displayedTextPx() + "px)"
+                         : root.displayedTextPx() + "px")
+                  color: root.muted
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.caption
+                  font.bold: true
+                }
+              }
+
+              PanelSlider {
+                id: textSizeSlider
+                width: parent.width
+                bar: root.bar
+                minimum: 0
+                maximum: root.textSizeStops.length - 1
+                step: 1
+                integer: true
+                tickCount: root.textSizeStops.length
+                value: root.currentTextIndex()
+                onMoved: function(v) { root.textSizePreviewIndex = Math.round(v) }
+                onReleased: function(v) { root.setTextSize(root.textSizeStops[Math.round(v)]) }
+              }
+
+              PanelSeparator { foreground: root.foreground }
               PanelSectionHeader { text: "SCALE"; foreground: root.foreground; fontFamily: root.fontFamily }
               Row {
                 width: parent.width
@@ -1383,47 +1424,6 @@ Panel {
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
                 wrapMode: Text.WordWrap
-              }
-
-              PanelSeparator { foreground: root.foreground }
-
-              Item {
-                width: parent.width
-                implicitHeight: Math.max(textSizeHeader.implicitHeight, textSizeValueLabel.implicitHeight)
-                PanelSectionHeader {
-                  id: textSizeHeader
-                  anchors.left: parent.left
-                  anchors.verticalCenter: parent.verticalCenter
-                  text: "TEXT SIZE"
-                  foreground: root.foreground
-                  fontFamily: root.fontFamily
-                }
-                Text {
-                  id: textSizeValueLabel
-                  anchors.right: parent.right
-                  anchors.verticalCenter: parent.verticalCenter
-                  text: (root.displayedTextPx() === 12
-                         ? "Default (" + root.displayedTextPx() + "px)"
-                         : root.displayedTextPx() + "px")
-                  color: root.muted
-                  font.family: root.fontFamily
-                  font.pixelSize: Style.font.caption
-                  font.bold: true
-                }
-              }
-
-              PanelSlider {
-                id: textSizeSlider
-                width: parent.width
-                bar: root.bar
-                minimum: 0
-                maximum: root.textSizeStops.length - 1
-                step: 1
-                integer: true
-                tickCount: root.textSizeStops.length
-                value: root.currentTextIndex()
-                onMoved: function(v) { root.textSizePreviewIndex = Math.round(v) }
-                onReleased: function(v) { root.setTextSize(root.textSizeStops[Math.round(v)]) }
               }
             }
           }
