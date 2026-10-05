@@ -71,6 +71,8 @@ Panel {
   readonly property real physicalUnitScale: calculatePhysicalUnitScale()
   readonly property real smallestPhysicalDiagonal: calculateSmallestPhysicalDiagonal()
   readonly property real previewSizeExponent: 0.65
+  readonly property var textSizeStops: [9, 10, 11, 12, 14, 16, 20]
+  property int textSizePreviewIndex: -1
 
   function alpha(color, opacity) {
     return Qt.rgba(color.r, color.g, color.b, opacity)
@@ -101,6 +103,30 @@ Panel {
     for (var i = 0; i < displays.length; i++)
       if (displays[i].name === id) return displays[i]
     return null
+  }
+
+  function nearestTextStop(px) {
+    var best = 0
+    var bestDist = 1e9
+    for (var i = 0; i < textSizeStops.length; i++) {
+      var d = Math.abs(textSizeStops[i] - px)
+      if (d < bestDist) { bestDist = d; best = i }
+    }
+    return best
+  }
+
+  function currentTextIndex() {
+    return textSizePreviewIndex >= 0 ? textSizePreviewIndex : nearestTextStop(Style.font.baseSize)
+  }
+
+  function displayedTextPx() {
+    return textSizePreviewIndex >= 0 ? textSizeStops[textSizePreviewIndex] : Style.font.baseSize
+  }
+
+  function setTextSize(px) {
+    textSizePreviewIndex = nearestTextStop(px)
+    textScaleProc.command = ["omarchy-display-text-size", String(px)]
+    if (!textScaleProc.running) textScaleProc.running = true
   }
 
   function cloneDisplays(source) {
@@ -755,6 +781,20 @@ Panel {
     }
   }
 
+  Process {
+    id: textScaleProc
+    stdout: StdioCollector { waitForEnd: true }
+  }
+
+  Connections {
+    target: Style
+    function onFontBaseSizeChanged() {
+      if (root.textSizePreviewIndex >= 0
+          && root.nearestTextStop(Style.font.baseSize) === root.textSizePreviewIndex)
+        root.textSizePreviewIndex = -1
+    }
+  }
+
   implicitWidth: barButton.implicitWidth
   implicitHeight: barButton.implicitHeight
 
@@ -1079,7 +1119,7 @@ Panel {
             implicitWidth: refreshRateDropdown.implicitWidth + resolutionDropdown.implicitWidth
               + Style.space(10) + Style.space(24)
             width: (parent.width - parent.spacing) * implicitWidth / parent.naturalWidth
-            height: settingsColumn.implicitHeight + Style.space(24)
+            height: Math.max(settingsColumn.implicitHeight, nightLightColumn.implicitHeight) + Style.space(24)
             radius: Style.cornerRadius
             color: Style.normalFillFor(root.foreground, Color.accent)
             borderSpec: Border.controlSpec("normal", root.foreground, Color.accent)
@@ -1224,12 +1264,15 @@ Panel {
             implicitWidth: scheduleFromDropdown.implicitWidth + scheduleToDropdown.implicitWidth
               + Style.space(8) + Style.space(24)
             width: parent.width - parent.spacing - displaySettingsCard.width
-            height: settingsColumn.implicitHeight + Style.space(24)
+            height: displaySettingsCard.height
             radius: Style.cornerRadius
             color: Style.normalFillFor(root.foreground, Color.accent)
             borderSpec: Border.controlSpec("normal", root.foreground, Color.accent)
             Column {
-              anchors.fill: parent
+              id: nightLightColumn
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.top: parent.top
               anchors.margins: Style.space(12)
               spacing: Style.space(8)
               Item {
@@ -1340,6 +1383,47 @@ Panel {
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
                 wrapMode: Text.WordWrap
+              }
+
+              PanelSeparator { foreground: root.foreground }
+
+              Item {
+                width: parent.width
+                implicitHeight: Math.max(textSizeHeader.implicitHeight, textSizeValueLabel.implicitHeight)
+                PanelSectionHeader {
+                  id: textSizeHeader
+                  anchors.left: parent.left
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: "TEXT SIZE"
+                  foreground: root.foreground
+                  fontFamily: root.fontFamily
+                }
+                Text {
+                  id: textSizeValueLabel
+                  anchors.right: parent.right
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: (root.displayedTextPx() === 12
+                         ? "Default (" + root.displayedTextPx() + "px)"
+                         : root.displayedTextPx() + "px")
+                  color: root.muted
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.caption
+                  font.bold: true
+                }
+              }
+
+              PanelSlider {
+                id: textSizeSlider
+                width: parent.width
+                bar: root.bar
+                minimum: 0
+                maximum: root.textSizeStops.length - 1
+                step: 1
+                integer: true
+                tickCount: root.textSizeStops.length
+                value: root.currentTextIndex()
+                onMoved: function(v) { root.textSizePreviewIndex = Math.round(v) }
+                onReleased: function(v) { root.setTextSize(root.textSizeStops[Math.round(v)]) }
               }
             }
           }
