@@ -29,4 +29,15 @@ TestCase {
       { x: 0, y: 0, width: 1440, height: 900 },
       { x: 1440, y: 0, width: 1920, height: 1080 }))
   }
+
+  function test_near_gap_snaps_to_touching_edge() {
+    var stacked = [
+      { name: "HDMI-A-1", x: 0, y: 0, width: 1536, height: 864 },
+      { name: "eDP-1", x: 0, y: 864, width: 1536, height: 864 }
+    ]
+    var result = Arrangement.nearestClearPosition(stacked, "eDP-1", 0, 866)
+    compare(result.x, 0)
+    compare(result.y, 864)
+    verify(result.snapped)
+  }
 }

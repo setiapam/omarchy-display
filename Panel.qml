@@ -555,8 +555,8 @@ Panel {
     if (canvas.layoutScale <= 0) return
     var visualPositionX = (screenX - canvas.originX) / canvas.layoutScale
     var visualPositionY = (screenY - canvas.originY) / canvas.layoutScale
-    var movedX = Math.round(visualPositionX / 10) * 10
-    var movedY = Math.round(visualPositionY / 10) * 10
+    var movedX = Math.round(visualPositionX)
+    var movedY = Math.round(visualPositionY)
     var clearPosition = nearestClearPosition(movedName, movedX, movedY)
     movedX = clearPosition.x
     movedY = clearPosition.y

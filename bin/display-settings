@@ -345,8 +345,47 @@ arrange_displays() {
   done < <(jq -c '.[]' <<<"$layout")
 
   state=$(state_from_runtime "$monitors")
-  state=$(jq -cn --argjson state "$state" --argjson layout "$layout" '
-    reduce $layout[] as $position
+  state=$(jq -cn --argjson state "$state" --argjson layout "$layout" --argjson monitors "$monitors" '
+    def snap_edges($threshold):
+      . as $in |
+      ([
+        $in[] as $pos |
+        $monitors[] | select(.name == $pos.name) | . as $m |
+        {
+          name: $pos.name,
+          x: $pos.x,
+          y: $pos.y,
+          w: (if (($m.transform // 0) % 2) == 1 then $m.height else $m.width end / $m.scale | round),
+          h: (if (($m.transform // 0) % 2) == 1 then $m.width else $m.height end / $m.scale | round)
+        }
+      ]) as $rects |
+      reduce range(0; $rects | length) as $i (
+        $rects;
+        reduce range(0; $rects | length) as $j (
+          .;
+          if $i == $j then . else
+            (.[$i]) as $A | (.[$j]) as $B |
+            (if (($B.x - ($A.x + $A.w)) | abs) <= $threshold then
+              .[$j].x = ($A.x + $A.w)
+            elif (($A.x - ($B.x + $B.w)) | abs) <= $threshold then
+              .[$j].x = ($A.x - $B.w)
+            else . end) |
+            (if (($B.y - ($A.y + $A.h)) | abs) <= $threshold then
+              .[$j].y = ($A.y + $A.h)
+            elif (($A.y - ($B.y + $B.h)) | abs) <= $threshold then
+              .[$j].y = ($A.y - $B.h)
+            else . end) |
+            (if (($B.x - $A.x) | abs) <= $threshold then .[$j].x = $A.x else . end) |
+            (if (($B.y - $A.y) | abs) <= $threshold then .[$j].y = $A.y else . end)
+          end
+        )
+      ) |
+      ([.[].x] | min) as $minX |
+      ([.[].y] | min) as $minY |
+      map({name: .name, x: (.x - $minX), y: (.y - $minY)});
+
+    ($layout | snap_edges(8)) as $clean_layout |
+    reduce $clean_layout[] as $position
       ($state;
         .monitors[$position.name].x = $position.x |
         .monitors[$position.name].y = $position.y)
